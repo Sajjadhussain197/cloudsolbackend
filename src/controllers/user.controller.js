@@ -231,7 +231,7 @@ const refreshAcessToken = asyncHandler(async (req, res) => {
 const changePassword = asyncHandler(async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body
-
+        console.log(oldPassword, newPassword)
         const user = await User.findById(req.user?._id)
 
         const isPasswordCorrect = user.isPasswordCorrect(oldPassword);
@@ -258,8 +258,10 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
+    
     try {
         const { email, fullName } = req.body;
+        console.log(email, fullName)
         if (!email || !fullName) {
             throw new ApiError(400, "All fields are required")
 
@@ -343,6 +345,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     }
 })
 const deleteUser = asyncHandler(async (req, res) => {
+    console.log(req)
     try {
         const user = await User.findByIdAndDelete(req.params.id)
        
@@ -353,6 +356,7 @@ const deleteUser = asyncHandler(async (req, res) => {
             .json(new ApiResponse(200, {}, "User deleted successfully"))    
 
     } catch (error) {
+    console.log(error)
         
     }
 })

@@ -36,8 +36,7 @@ router.route("/current-user").get(verifyJWT,getCurrentUser)
 router.route("/update-account").patch(verifyJWT,updateAccountDetails)
 router.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAvatar)
 router.route("/cover-image").patch(verifyJWT,upload.single("/coverImage"),updateUserCoverImage)
-
-router.route("/getuserbyid/:id").get(verifyJWT, getUserById);
-router.route("/getallusers").get(verifyJWT, getAllUsers);
+router.route("/getuserbyid/:id").get( getUserById);
+router.route("/getallusers").get( getAllUsers);
 
 export default router;
