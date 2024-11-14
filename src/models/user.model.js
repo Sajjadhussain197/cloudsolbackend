@@ -25,13 +25,6 @@ const userSchema = new Schema(
             trim: true, 
             index: true
         },
-        avatar: {
-            type: String, // cloudinary url
-            required: true,
-        },
-        coverImage: {
-            type: String, // cloudinary url
-        },
         password: {
             type: String,
             required: [true, 'Password is required']
@@ -75,9 +68,6 @@ const userSchema = new Schema(
 
   userSchema.methods.isPasswordCorrect = async function(password) {
     try {
-
-
-        // Compare password with hashed password stored in the database
         const isMatch = await bcrypt.compare(password, this.password);
         console.log(isMatch)
 
@@ -90,7 +80,6 @@ const userSchema = new Schema(
   userSchema.methods.generateAccessToken =  function(){
    return jwt.sign({
         _id:this._id,
-        username:this.username,
         email:this.email,
         fullName:this.fullName
     },

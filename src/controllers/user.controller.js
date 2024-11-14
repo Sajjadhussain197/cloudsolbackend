@@ -1,14 +1,9 @@
-import { json } from "express"
+
 import { asyncHandler } from "../../utils/asyncHandler.js"
 import { ApiError } from "../../utils/ApiError.js"
 import { ApiResponse } from "../../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
-import { uploadCloudinary } from "../../utils/cloudinary.js"
 import jwt from "jsonwebtoken"
-import {v4 as uuidv4  } from "uuid";
-import { sendVerificationEmail } from "../../utils/nodemailer.js";
-import pkg from 'base64url';
-const { base64url } = pkg;
 
 const generateAccessTokenRefreshToken = async (userId) => {
     try {
@@ -17,7 +12,8 @@ const generateAccessTokenRefreshToken = async (userId) => {
         const refreshToken = user.generateRefreshToken();
         user.refreshToken = refreshToken
         await user.save({ validateBeforeSave: false })
-
+        
+        console.log(user.refreshToken,"usertoken")
         return { accessToken, refreshToken }
 
 
@@ -32,18 +28,8 @@ const generateAccessTokenRefreshToken = async (userId) => {
 
 
 const registerUser = asyncHandler(async (req, res) => {
-    // get user data from frontend
-    // validate the data
-    // check in db
-    // check for image
-    // upload cloudinary
-    // create user objec, entery in db
-    // remove password from responsse
-    // check for user creation in  db
-    // mail verification
-    // send response
     const { fullName, username, email, password } = req.body;
-    console.log(fullName, username, password, email)
+    
     if (
         [fullName, email, password, username].some((field) => field?.trim() === '')
     ) {
@@ -56,38 +42,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
-    let coverImageLocalPath;
-    if (req.files && Array.isArray(req.files.coverImage && req.files.coverImage.length > 0)) {
-
-        coverImageLocalPath = req.files?.coverImage[0]?.path;
-    }
-
-
-
-
-
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is required")
-
-    }
-
-    const avatar = await uploadCloudinary(avatarLocalPath)
-    const coverImage = await uploadCloudinary(coverImageLocalPath)
-    console.log(avatar, coverImage)
-    if (!avatar) {
-        throw new ApiError(400, "Avatar file is required")
-
-    }
-    const verificationToken = uuidv4(); // Generate verification token
-   
     const user = await User.create({
         fullName,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
         email,
         password,
-        verificationToken,
         username: username.toLowerCase()
     })
 
@@ -104,14 +62,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
     try {
-        //get data from front end , req,body
-        //validate data, emai, username, password
-        // check user from email
-        //get user 
-        //check password
-        //access token and refreshtoken
-        //send cookies
         const { username, email, password } = req.body
+        console.log(username, email, password,"login")
         if (!username && !email) {
             throw new ApiError(400, "Username or Email is required")
         }
@@ -120,20 +72,20 @@ const loginUser = asyncHandler(async (req, res) => {
             throw new ApiError(404, "User doesnt exist")
 
         }
+        console.log(user,"user")
         const ispasswordValid = await user.isPasswordCorrect(password)
         if (!ispasswordValid) {
             throw new ApiError(401, "the password is incorrect")
 
         }
-        console.log(ispasswordValid)
 
         const { accessToken, refreshToken } = await generateAccessTokenRefreshToken(user._id)
-
+            console.log(accessToken, refreshToken,"accessToken, refreshToken")
         const loggedInUser = await User.findById(user._id).select(
             "-password -refreshToken"
 
         )
-
+            console.log(loggedInUser,"loggedInUser")
         const options = {
             httpOnly: true,
             secure: true
@@ -177,7 +129,7 @@ const loggedOutUser = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true
     }
-    console.log(req.user._id)
+    
     return res.status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
@@ -231,7 +183,7 @@ const refreshAcessToken = asyncHandler(async (req, res) => {
 const changePassword = asyncHandler(async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body
-        console.log(oldPassword, newPassword)
+        
         const user = await User.findById(req.user?._id)
 
         const isPasswordCorrect = user.isPasswordCorrect(oldPassword);
@@ -261,7 +213,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     
     try {
         const { email, fullName } = req.body;
-        console.log(email, fullName)
+        
+        
         if (!email || !fullName) {
             throw new ApiError(400, "All fields are required")
 
@@ -345,7 +298,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     }
 })
 const deleteUser = asyncHandler(async (req, res) => {
-    console.log(req)
+    
     try {
         const user = await User.findByIdAndDelete(req.params.id)
        
@@ -372,7 +325,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const getUserById = asyncHandler(async (req, res) => {
     try {
-        console.log(req.params.id)      
+        
         const user = await User.findById(req.params.id)
         if (!user) {
             throw new ApiError(404, "User not found");
